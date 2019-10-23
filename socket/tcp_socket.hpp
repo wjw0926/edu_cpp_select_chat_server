@@ -4,14 +4,27 @@
 
 #pragma once
 
+#include "error.hpp"
+
 class TCPSocket {
 public:
-    TCPSocket() = default;;
+    TCPSocket() = default;
     ~TCPSocket() = default;
 
     int GetSockfd() { return sockfd_; };
-    void SetSockfd(int sockfd) { sockfd_ = sockfd; };
+    int GetClientSockfd() { return client_sockfd_; };
+
+    Error::ErrorCode CreateSocket();
+    Error::ErrorCode BindSocket(unsigned short port);
+    Error::ErrorCode ListenSocket(int backlog);
+    Error::ErrorCode AcceptSocket();
+    Error::ErrorCode ConnectSocket(unsigned short port);
+    Error::ErrorCode CloseSocket();
+
+    static Error::ErrorCode SendData(int sockfd, const char *data, int size);
+    static int RecvData(int sockfd, char *data, int size);
 
 private:
-    int sockfd_ = 0;
+    int sockfd_ = -1;
+    int client_sockfd_ = -1;
 };

@@ -17,7 +17,17 @@ add_executable(select_chat_server
         main.cpp
         socket/tcp_socket.cpp
         socket/tcp_socket.hpp
-        socket/error.hpp)
+        socket/error.hpp
+        )
+
+add_executable(select_chat_client
+        client/main.cpp
+        client/client.cpp
+        client/client.hpp
+        socket/tcp_socket.cpp
+        socket/tcp_socket.hpp
+        socket/error.hpp
+        )
 
 target_link_libraries(select_chat_server
         server

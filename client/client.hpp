@@ -4,10 +4,10 @@
 
 #pragma once
 
-class Server {
+class Client {
 public:
-    Server() = default;
-    ~Server() = default;
+    Client() = default;
+    ~Client() = default;
 
     static int Run(unsigned short port);
 };
