@@ -12,7 +12,7 @@ public:
     ~TCPSocket() = default;
 
     int GetSockfd() { return sockfd_; };
-    int GetClientSockfd() { return client_sockfd_; };
+    int GetConnectedSockfd() { return connected_sockfd_; };
 
     Error::ErrorCode CreateSocket();
     Error::ErrorCode BindSocket(unsigned short port);
@@ -26,5 +26,5 @@ public:
 
 private:
     int sockfd_ = -1;
-    int client_sockfd_ = -1;
+    int connected_sockfd_ = -1;
 };

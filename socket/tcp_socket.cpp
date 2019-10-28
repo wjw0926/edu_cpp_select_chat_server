@@ -43,7 +43,7 @@ Error::ErrorCode TCPSocket::AcceptSocket() {
     struct sockaddr_in client_address{};
     socklen_t client_addr_size = sizeof(client_address);
 
-    if ((client_sockfd_ = accept(sockfd_, (struct sockaddr *) &client_address, &client_addr_size)) == -1) {
+    if ((connected_sockfd_ = accept(sockfd_, (struct sockaddr *) &client_address, &client_addr_size)) == -1) {
         return Error::ErrorCode::ACCEPT_SOCKET_FAIL;
     }
 
