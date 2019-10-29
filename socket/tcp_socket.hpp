@@ -4,7 +4,8 @@
 
 #pragma once
 
-#include "error.hpp"
+#include "../common/error.hpp"
+#include "../common/packet.hpp"
 
 class TCPSocket {
 public:
@@ -14,14 +15,14 @@ public:
     int GetSockfd() { return sockfd_; };
     int GetConnectedSockfd() { return connected_sockfd_; };
 
-    Error::ErrorCode CreateSocket();
-    Error::ErrorCode BindSocket(unsigned short port);
-    Error::ErrorCode ListenSocket(int backlog);
-    Error::ErrorCode AcceptSocket();
-    Error::ErrorCode ConnectSocket(unsigned short port);
-    Error::ErrorCode CloseSocket();
+    ErrorCode CreateSocket();
+    ErrorCode BindSocket(unsigned short port);
+    ErrorCode ListenSocket(int backlog);
+    ErrorCode AcceptSocket();
+    ErrorCode ConnectSocket(unsigned short port);
+    ErrorCode CloseSocket();
 
-    static Error::ErrorCode SendData(int sockfd, const char *data, int size);
+    static ErrorCode SendData(int sockfd, const char *data, int size);
     static int RecvData(int sockfd, char *data, int size);
 
 private:

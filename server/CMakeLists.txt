@@ -11,8 +11,9 @@ set(CMAKE_CXX_STANDARD 17)
 # -pedantic: warn about non-portable code, C++ that uses language extensions
 add_compile_options(-Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic)
 
+include_directories(common)
+
 add_library(server STATIC
-        packet.cpp
-        packet.hpp
         server.cpp
-        server.hpp)
+        server.hpp
+        )

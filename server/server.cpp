@@ -10,29 +10,28 @@
 
 int Server::Run(unsigned short port) {
     auto socket = std::make_unique<TCPSocket>();
-    Error error = Error();
 
-    if (socket->CreateSocket() == Error::ErrorCode::CREATE_SOCKET_FAIL) {
-        std::cout << "Error: " << error.error_map.at(Error::ErrorCode::CREATE_SOCKET_FAIL) << std::endl;
+    if (socket->CreateSocket() == ErrorCode::CREATE_SOCKET_FAIL) {
+        std::cout << "Error: " << error_map.at(ErrorCode::CREATE_SOCKET_FAIL) << std::endl;
         return -1;
     }
 
-    if (socket->BindSocket(port) == Error::ErrorCode::BIND_SOCKET_FAIL) {
-        std::cout << "Error: " << error.error_map.at(Error::ErrorCode::BIND_SOCKET_FAIL) << std::endl;
+    if (socket->BindSocket(port) == ErrorCode::BIND_SOCKET_FAIL) {
+        std::cout << "Error: " << error_map.at(ErrorCode::BIND_SOCKET_FAIL) << std::endl;
 
-        if (socket->CloseSocket() == Error::ErrorCode::CLOSE_SOCKET_FAIL) {
-            std::cout << "Error: " << error.error_map.at(Error::ErrorCode::CLOSE_SOCKET_FAIL) << std::endl;
+        if (socket->CloseSocket() == ErrorCode::CLOSE_SOCKET_FAIL) {
+            std::cout << "Error: " << error_map.at(ErrorCode::CLOSE_SOCKET_FAIL) << std::endl;
             return -1;
         }
 
         return -1;
     }
 
-    if (socket->ListenSocket(5) == Error::ErrorCode::LISTEN_SOCKET_FAIL) {
-        std::cout << "Error: " << error.error_map.at(Error::ErrorCode::LISTEN_SOCKET_FAIL) << std::endl;
+    if (socket->ListenSocket(5) == ErrorCode::LISTEN_SOCKET_FAIL) {
+        std::cout << "Error: " << error_map.at(ErrorCode::LISTEN_SOCKET_FAIL) << std::endl;
 
-        if (socket->CloseSocket() == Error::ErrorCode::CLOSE_SOCKET_FAIL) {
-            std::cout << "Error: " << error.error_map.at(Error::ErrorCode::CLOSE_SOCKET_FAIL) << std::endl;
+        if (socket->CloseSocket() == ErrorCode::CLOSE_SOCKET_FAIL) {
+            std::cout << "Error: " << error_map.at(ErrorCode::CLOSE_SOCKET_FAIL) << std::endl;
             return -1;
         }
 
@@ -41,11 +40,11 @@ int Server::Run(unsigned short port) {
 
     std::cout << "Running server on port " << port << std::endl;
 
-    if (socket->AcceptSocket() == Error::ErrorCode::ACCEPT_SOCKET_FAIL) {
-        std::cout << "Error: " << error.error_map.at(Error::ErrorCode::ACCEPT_SOCKET_FAIL) << std::endl;
+    if (socket->AcceptSocket() == ErrorCode::ACCEPT_SOCKET_FAIL) {
+        std::cout << "Error: " << error_map.at(ErrorCode::ACCEPT_SOCKET_FAIL) << std::endl;
 
-        if (socket->CloseSocket() == Error::ErrorCode::CLOSE_SOCKET_FAIL) {
-            std::cout << "Error: " << error.error_map.at(Error::ErrorCode::CLOSE_SOCKET_FAIL) << std::endl;
+        if (socket->CloseSocket() == ErrorCode::CLOSE_SOCKET_FAIL) {
+            std::cout << "Error: " << error_map.at(ErrorCode::CLOSE_SOCKET_FAIL) << std::endl;
             return -1;
         }
 
@@ -61,7 +60,7 @@ int Server::Run(unsigned short port) {
         int recv = socket->RecvData(socket->GetConnectedSockfd(), reinterpret_cast<char *>(&buffer), sizeof(buffer));
 
         if (recv == -1) {
-            std::cout << "Error: " << error.error_map.at(Error::ErrorCode::RECEIVE_FAIL) << std::endl;
+            std::cout << "Error: " << error_map.at(ErrorCode::RECEIVE_FAIL) << std::endl;
             break;
         } else if (recv == 0) {
             std::cout << "Disconnected" << std::endl;
@@ -72,13 +71,13 @@ int Server::Run(unsigned short port) {
 
         std::cout << "Echoing..." << std::endl;
 
-        if (socket->SendData(socket->GetConnectedSockfd(), reinterpret_cast<char *>(&buffer), sizeof(buffer)) == Error::ErrorCode::SEND_FAIL) {
-            std::cout << "Error: " << error.error_map.at(Error::ErrorCode::SEND_FAIL) << std::endl;
+        if (socket->SendData(socket->GetConnectedSockfd(), reinterpret_cast<char *>(&buffer), sizeof(buffer)) == ErrorCode::SEND_FAIL) {
+            std::cout << "Error: " << error_map.at(ErrorCode::SEND_FAIL) << std::endl;
         }
     }
 
-    if (socket->CloseSocket() == Error::ErrorCode::CLOSE_SOCKET_FAIL) {
-        std::cout << "Error: " << error.error_map.at(Error::ErrorCode::CLOSE_SOCKET_FAIL) << std::endl;
+    if (socket->CloseSocket() == ErrorCode::CLOSE_SOCKET_FAIL) {
+        std::cout << "Error: " << error_map.at(ErrorCode::CLOSE_SOCKET_FAIL) << std::endl;
         return -1;
     }
 
