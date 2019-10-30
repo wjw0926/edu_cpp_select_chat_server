@@ -23,7 +23,7 @@ public:
     ErrorCode CloseSocket();
 
     static ErrorCode SendData(int sockfd, const char *data, int size);
-    static int RecvData(int sockfd, char *data, int size);
+    static int RecvData(int sockfd, char *data);
 
 private:
     int sockfd_ = -1;

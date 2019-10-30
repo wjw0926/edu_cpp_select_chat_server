@@ -6,6 +6,9 @@ int main(int argc, char* argv[]) {
         std::cout << "Usage: select_chat_server <port>" << std::endl;
         return 0;
     } else {
-        return Server::Run(static_cast<unsigned short>(std::stoul(argv[1])));
+        Server server{};
+        server.Init();
+
+        return server.Run(static_cast<unsigned short>(std::stoul(argv[1])));
     }
 }

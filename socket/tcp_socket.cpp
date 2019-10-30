@@ -84,6 +84,6 @@ ErrorCode TCPSocket::SendData(int sockfd, const char *data, int size) {
     return ErrorCode::NONE;
 }
 
-int TCPSocket::RecvData(int sockfd, char *data, int size) {
-    return recv(sockfd, data, size, 0);
+int TCPSocket::RecvData(int sockfd, char *data) {
+    return recv(sockfd, data, MAX_PACKET_SIZE, 0);
 }

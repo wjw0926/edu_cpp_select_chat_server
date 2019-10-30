@@ -29,22 +29,30 @@ int Client::Run(unsigned short port) {
 
     std::cout << "Connected! Type \"done\" to exit." << std::endl;
 
-    char buffer[256];
+    struct PacketEchoReq echo_req{};
+    unsigned short recv_pos = 0;
 
-    while (strcmp(buffer, "done") != 0) {
+    while (strcmp(echo_req.message, "done") != 0) {
         std::cout << "Message: ";
 
-        fgets(buffer, 256, stdin);
-        buffer[strlen(buffer) - 1] = '\0';
+        fgets(echo_req.message, MAX_ECHO_LENGTH, stdin);
+        echo_req.message[strlen(echo_req.message) - 1] = '\0';
+        echo_req.total_size = MAX_ECHO_LENGTH + PACKET_HEADER_SIZE;
+        echo_req.packet_id = PacketID::ECHO_REQ;
 
+        auto buffer = reinterpret_cast<const char *>(&echo_req);
+
+        // Sending echo packet
         std::cout << "Sending..." << std::endl;
-
-        if (socket->SendData(socket->GetSockfd(), reinterpret_cast<const char *>(&buffer), sizeof(buffer)) == ErrorCode::SEND_FAIL) {
+        if (socket->SendData(socket->GetSockfd(), buffer, sizeof(PacketEchoReq)) == ErrorCode::SEND_FAIL) {
             std::cout << "Error: " << error_map.at(ErrorCode::SEND_FAIL) << std::endl;
             break;
         }
 
-        int recv = socket->RecvData(socket->GetSockfd(), reinterpret_cast<char *>(&buffer), sizeof(buffer));
+        // Receiving echo packet
+        char recv_buffer[MAX_PACKET_SIZE * 2];
+
+        int recv = socket->RecvData(socket->GetSockfd(), &recv_buffer[recv_pos]);
 
         if (recv == -1) {
             std::cout << "Error: " << error_map.at(ErrorCode::RECEIVE_FAIL) << std::endl;
@@ -54,7 +62,34 @@ int Client::Run(unsigned short port) {
             break;
         }
 
-        std::cout << "Received: " << buffer << std::endl;
+        // Process received data
+        auto read_pos = 0;
+        unsigned short remain_data = recv_pos + recv;
+
+        while (remain_data >= PACKET_HEADER_SIZE) {
+            auto header = reinterpret_cast<PacketHeader *>(&recv_buffer[read_pos]);
+
+            if (header->total_size > remain_data) {
+                break;
+            }
+
+            // Echo message from packet
+            if (header->packet_id == PacketID::ECHO_RES) {
+                auto echo_res = reinterpret_cast<PacketEchoRes *>(&recv_buffer[read_pos]);
+
+                std::cout << "Received PacketID: " << static_cast<unsigned short>(echo_res->packet_id) << ", "
+                          << echo_res->message << " (" << echo_res->total_size << " bytes)" << std::endl;
+            }
+
+            read_pos += header->total_size;
+            remain_data -= header->total_size;
+        }
+
+        // Move remain data to the first position of receive buffer
+        if (remain_data > 0) {
+            memcpy(recv_buffer, &recv_buffer[read_pos], remain_data);
+        }
+        recv_pos = remain_data;
     }
 
     std::cout << "Done!" << std::endl;

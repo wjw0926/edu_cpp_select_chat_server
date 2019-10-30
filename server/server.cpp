@@ -3,10 +3,14 @@
 //
 
 #include <iostream>
-#include <cstring>
 #include <memory>
 #include "server.hpp"
 #include "../socket/tcp_socket.hpp"
+
+void Server::Init() {
+    FuncList[static_cast<int>(PacketID::ECHO_REQ)] = FuncEcho;
+    FuncList[static_cast<int>(PacketID::LOGIN_REQ)] = FuncLogin;
+}
 
 int Server::Run(unsigned short port) {
     auto socket = std::make_unique<TCPSocket>();
@@ -53,11 +57,12 @@ int Server::Run(unsigned short port) {
 
     std::cout << "Accept client on port " << port << std::endl;
 
-    char buffer[256];
+    unsigned short recv_pos = 0;
 
-    while (strcmp(buffer, "done") != 0) {
-        memset(buffer, 0, sizeof(buffer));
-        int recv = socket->RecvData(socket->GetConnectedSockfd(), reinterpret_cast<char *>(&buffer), sizeof(buffer));
+    while (true) {
+        char recv_buffer[MAX_PACKET_SIZE * 2];
+
+        int recv = socket->RecvData(socket->GetConnectedSockfd(), &recv_buffer[recv_pos]);
 
         if (recv == -1) {
             std::cout << "Error: " << error_map.at(ErrorCode::RECEIVE_FAIL) << std::endl;
@@ -67,13 +72,29 @@ int Server::Run(unsigned short port) {
             break;
         }
 
-        std::cout << "Received: " << buffer << std::endl;
+        // Process received data
+        unsigned short read_pos = 0;
+        auto remain_data = recv_pos + recv;
 
-        std::cout << "Echoing..." << std::endl;
+        while (remain_data >= PACKET_HEADER_SIZE) {
+            auto header = reinterpret_cast<PacketHeader *>(&recv_buffer[read_pos]);
 
-        if (socket->SendData(socket->GetConnectedSockfd(), reinterpret_cast<char *>(&buffer), sizeof(buffer)) == ErrorCode::SEND_FAIL) {
-            std::cout << "Error: " << error_map.at(ErrorCode::SEND_FAIL) << std::endl;
+            if (header->total_size > remain_data) {
+                break;
+            }
+
+            // Execute packet function
+            (*FuncList[static_cast<int>(header->packet_id)])(socket->GetConnectedSockfd(), &recv_buffer[read_pos], header->total_size);
+
+            read_pos += header->total_size;
+            remain_data -= header->total_size;
         }
+
+        // Move remain data to the first position of receive buffer
+        if (remain_data > 0) {
+            memcpy(recv_buffer, &recv_buffer[read_pos], remain_data);
+        }
+        recv_pos = remain_data;
     }
 
     if (socket->CloseSocket() == ErrorCode::CLOSE_SOCKET_FAIL) {
@@ -82,4 +103,30 @@ int Server::Run(unsigned short port) {
     }
 
     return 0;
+}
+
+void Server::FuncEcho(int sockfd, char *buffer, unsigned short total_size) {
+    PacketEchoReq req{};
+    PacketEchoRes res{};
+
+    memcpy(&req, buffer, total_size);
+
+    std::cout << "Received PacketID: " << static_cast<unsigned short>(req.packet_id) << ", "
+              << req.message << " (" << req.total_size << " bytes)" << std::endl;
+
+    res.packet_id = PacketID::ECHO_RES;
+    res.total_size = req.total_size;
+    strncpy(res.message, req.message, req.total_size);
+
+    std::cout << "Echoing..." << std::endl;
+
+    auto send_buffer = reinterpret_cast<const char *>(&res);
+
+    if (TCPSocket::SendData(sockfd, send_buffer, sizeof(PacketEchoRes)) == ErrorCode::SEND_FAIL) {
+        std::cout << "Error: " << error_map.at(ErrorCode::SEND_FAIL) << std::endl;
+    }
+}
+
+void Server::FuncLogin(int sockfd, char *buffer, unsigned short total_size) {
+
 }
