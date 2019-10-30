@@ -19,7 +19,6 @@ public:
     ErrorCode BindSocket(unsigned short port);
     ErrorCode ListenSocket(int backlog);
     ErrorCode AcceptSocket();
-    ErrorCode ConnectSocket(unsigned short port);
     ErrorCode CloseSocket();
 
     static ErrorCode SendData(int sockfd, const char *data, int size);

@@ -4,7 +4,6 @@
 
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
 #include <unistd.h>
 #include "tcp_socket.hpp"
 
@@ -44,19 +43,6 @@ ErrorCode TCPSocket::AcceptSocket() {
 
     if ((connected_sockfd_ = accept(sockfd_, (struct sockaddr *) &client_address, &client_addr_size)) == -1) {
         return ErrorCode::ACCEPT_SOCKET_FAIL;
-    }
-
-    return ErrorCode::NONE;
-}
-
-ErrorCode TCPSocket::ConnectSocket(unsigned short port) {
-    struct sockaddr_in address{};
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = inet_addr("127.0.0.1");
-    address.sin_port = htons(port);
-
-    if (connect(sockfd_, (struct sockaddr *) &address, sizeof(struct sockaddr_in)) != 0) {
-        return ErrorCode::CONNECT_SOCKET_FAIL;
     }
 
     return ErrorCode::NONE;
