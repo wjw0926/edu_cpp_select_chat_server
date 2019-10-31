@@ -19,7 +19,10 @@ enum class ErrorCode {
 
     SOCKET_NOT_EXIST = 10,
     SEND_FAIL = 11,
-    RECEIVE_FAIL = 21
+    RECEIVE_FAIL = 21,
+
+    SELECT_FAIL = 30,
+    SELECT_TIMEOUT = 31
 };
 
 const std::unordered_map<ErrorCode, std::string> error_map = {
@@ -35,4 +38,7 @@ const std::unordered_map<ErrorCode, std::string> error_map = {
         {ErrorCode::SOCKET_NOT_EXIST,    "Socket is not exist"},
         {ErrorCode::SEND_FAIL,           "Failed to send data"},
         {ErrorCode::RECEIVE_FAIL,        "Failed to receive data"},
+
+        {ErrorCode::SELECT_FAIL,         "Failed to select"},
+        {ErrorCode::SELECT_TIMEOUT,      "Select timeout"},
 };
