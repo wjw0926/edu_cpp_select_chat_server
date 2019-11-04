@@ -11,14 +11,20 @@ set(CMAKE_CXX_STANDARD 17)
 # -pedantic: warn about non-portable code, C++ that uses language extensions
 add_compile_options(-Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic)
 
-include_directories(include)
-
-add_subdirectory(server)
+add_subdirectory(network)
 
 add_executable(select_chat_server
         main.cpp
-        socket/tcp_socket.cpp
-        socket/tcp_socket.hpp)
+        server/packet.hpp
+        server/config.hpp
+        server/chat_server.cpp
+        server/chat_server.hpp
+        server/user.cpp
+        server/user.hpp
+        server/user_manager.cpp
+        server/user_manager.hpp
+        server/room.cpp
+        server/room.hpp)
 
 target_link_libraries(select_chat_server
-        server)
+        network)
