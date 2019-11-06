@@ -14,10 +14,10 @@ public:
     int GetSockfd() { return sockfd_; };
     void SetSockfd(int sockfd) { sockfd_ = sockfd; };
 
-    Error::Code Create();
-    Error::Code Close();
+    Network::Error::Code Create();
+    Network::Error::Code Close();
 
-    Error::Code Send(const char *data, int size);
+    Network::Error::Code Send(const char *data, int size);
     int Receive(char *data, int size);
 
 private:

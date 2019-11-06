@@ -6,7 +6,7 @@
 #include <cstring>
 #include "tcp_server.hpp"
 
-Error::Code TCPServer::Init(unsigned short port, unsigned short packet_header_size) {
+Network::Error::Code TCPServer::Init(unsigned short port, unsigned short packet_header_size) {
     for (int i = 0; i < MAX_CONNECTED_SESSIONS; ++i) {
         sessions_.emplace_back(Session());
         available_session_index_.emplace_back(i);
@@ -14,36 +14,36 @@ Error::Code TCPServer::Init(unsigned short port, unsigned short packet_header_si
 
     packet_header_size_ = packet_header_size;
 
-    if (server_socket_.Create() == Error::Code::CREATE_SOCKET_FAIL) {
-        return Error::Code::CREATE_SOCKET_FAIL;
+    if (server_socket_.Create() == Network::Error::Code::CREATE_SOCKET_FAIL) {
+        return Network::Error::Code::CREATE_SOCKET_FAIL;
     }
 
-    if (server_socket_.Bind(port) == Error::Code::BIND_SOCKET_FAIL) {
-        if (server_socket_.Close() == Error::Code::CLOSE_SOCKET_FAIL) {
-            return Error::Code::CLOSE_SOCKET_FAIL;
+    if (server_socket_.Bind(port) == Network::Error::Code::BIND_SOCKET_FAIL) {
+        if (server_socket_.Close() == Network::Error::Code::CLOSE_SOCKET_FAIL) {
+            return Network::Error::Code::CLOSE_SOCKET_FAIL;
         }
 
-        return Error::Code::BIND_SOCKET_FAIL;
+        return Network::Error::Code::BIND_SOCKET_FAIL;
     }
 
-    if (server_socket_.Listen(BACKLOG) == Error::Code::LISTEN_SOCKET_FAIL) {
-        if (server_socket_.Close() == Error::Code::CLOSE_SOCKET_FAIL) {
-            return Error::Code::CLOSE_SOCKET_FAIL;
+    if (server_socket_.Listen(BACKLOG) == Network::Error::Code::LISTEN_SOCKET_FAIL) {
+        if (server_socket_.Close() == Network::Error::Code::CLOSE_SOCKET_FAIL) {
+            return Network::Error::Code::CLOSE_SOCKET_FAIL;
         }
 
-        return Error::Code::LISTEN_SOCKET_FAIL;
+        return Network::Error::Code::LISTEN_SOCKET_FAIL;
     }
 
     server_socket_.InitSocketSet();
 
     std::cout << "NETWORK: Running server on port " << port << std::endl;
 
-    return Error::Code::NONE;
+    return Network::Error::Code::NONE;
 }
 
 void TCPServer::Run() {
-    if (server_socket_.Select() == Error::Code::SELECT_FAIL) {
-        std::cout << "ERROR: " << error_.GetMessageMap().at(Error::Code::SELECT_FAIL) << std::endl;
+    if (server_socket_.Select() == Network::Error::Code::SELECT_FAIL) {
+        error_.PrintError(Network::Error::Code::SELECT_FAIL);
         return;
     }
 
@@ -60,16 +60,30 @@ void TCPServer::Run() {
     }
 }
 
+void TCPServer::End() {
+    server_socket_.Close();
+
+    for (int session_index = 0; session_index < MAX_CONNECTED_SESSIONS; ++session_index) {
+        if (sessions_[session_index].IsConnected()) {
+            sessions_[session_index].ClearRecvBuffer();
+            sessions_[session_index].ClearSendBuffer();
+            sessions_[session_index].SetDisconnected();
+
+            server_socket_.DropSocket(sessions_[session_index].GetSocket());
+        }
+    }
+}
+
 void TCPServer::CreateSession() {
     if (available_session_index_.empty()) {
-        std::cout << "ERROR: " << error_.GetMessageMap().at(Error::Code::MAX_CONNECTED_CLIENTS) << std::endl;
+        error_.PrintError(Network::Error::Code::MAX_CONNECTED_CLIENTS);
         return;
     }
 
     TCPSocket connected_socket = server_socket_.Accept();
 
     if (connected_socket.GetSockfd() == -1) {
-        std::cout << "ERROR: " << error_.GetMessageMap().at(Error::Code::ACCEPT_SOCKET_FAIL) << std::endl;
+        error_.PrintError(Network::Error::Code::ACCEPT_SOCKET_FAIL);
         return;
     }
 
@@ -90,9 +104,11 @@ void TCPServer::CreateSession() {
 void TCPServer::CloseSession(const int session_index) {
     OnClose(session_index);
 
-    server_socket_.DropSocket(sessions_[session_index].GetSocket());
-
+    sessions_[session_index].ClearRecvBuffer();
+    sessions_[session_index].ClearSendBuffer();
     sessions_[session_index].SetDisconnected();
+
+    server_socket_.DropSocket(sessions_[session_index].GetSocket());
 
     available_session_index_.emplace_back(session_index);
 
@@ -105,31 +121,27 @@ void TCPServer::Receive(const int session_index) {
     int received_bytes = session.Receive(MAX_RECV_BUFFER_SIZE);
 
     if (received_bytes == -1) {
-        std::cout << "ERROR: " << error_.GetMessageMap().at(Error::Code::RECEIVE_FAIL) << std::endl;
+        error_.PrintError(Network::Error::Code::RECEIVE_FAIL);
         CloseSession(session_index);
     } else if (received_bytes == 0) {
         CloseSession(session_index);
     } else {
-        std::cout << "NETWORK: Received " << session.GetRecvBuffer() << std::endl;
-
         unsigned short read_pos = 0;
 
         auto remain_data = session.GetPrevRecvPos() + received_bytes;
 
         while (remain_data >= packet_header_size_) {
             // First 2bytes of packet always indicates total size of the packet
-            unsigned short packet_size;
-            memcpy(&packet_size, &session.GetRecvBuffer()[read_pos], 2);
-            auto data = &session.GetRecvBuffer()[read_pos];
+            auto packet_size = reinterpret_cast<unsigned short *>(&session.GetRecvBuffer()[read_pos]);
 
-            if (remain_data < packet_size) {
+            if (remain_data < *packet_size) {
                 break;
             }
 
-            OnReceive(session_index, data, packet_size);
+            OnReceive(session_index, &session.GetRecvBuffer()[read_pos], *packet_size);
 
-            read_pos += packet_size;
-            remain_data -= packet_size;
+            read_pos += *packet_size;
+            remain_data -= *packet_size;
         }
 
         // Move remain data to the first position of receive buffer
@@ -140,11 +152,11 @@ void TCPServer::Receive(const int session_index) {
     }
 }
 
-void TCPServer::Send(int session_index, char *data, int size) {
+void TCPServer::Send(int session_index, const char *data, int size) {
     sessions_[session_index].ClearSendBuffer();
 
-    if (sessions_[session_index].Send(data, size) == Error::Code::SEND_FAIL) {
-        std::cout << "ERROR: " << error_.GetMessageMap().at(Error::Code::SEND_FAIL) << std::endl;
+    if (sessions_[session_index].Send(data, size) == Network::Error::Code::SEND_FAIL) {
+        error_.PrintError(Network::Error::Code::SEND_FAIL);
         CloseSession(session_index);
     }
 }

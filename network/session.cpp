@@ -5,7 +5,7 @@
 #include <cstring>
 #include "session.hpp"
 
-Error::Code Session::Send(const char *data, int size) {
+Network::Error::Code Session::Send(const char *data, int size) {
     return socket_.Send(data, size);
 }
 

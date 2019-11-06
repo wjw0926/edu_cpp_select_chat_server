@@ -12,11 +12,11 @@ public:
     ServerSocket() = default;
     ~ServerSocket() = default;
 
-    Error::Code Create();
-    Error::Code Close();
-    Error::Code Bind(unsigned short port);
-    Error::Code Listen(int backlog);
-    Error::Code Select();
+    Network::Error::Code Create();
+    Network::Error::Code Close();
+    Network::Error::Code Bind(unsigned short port);
+    Network::Error::Code Listen(int backlog);
+    Network::Error::Code Select();
     TCPSocket Accept();
 
     void InitSocketSet();

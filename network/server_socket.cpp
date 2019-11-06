@@ -5,43 +5,43 @@
 #include <netinet/in.h>
 #include "server_socket.hpp"
 
-Error::Code ServerSocket::Create() {
+Network::Error::Code ServerSocket::Create() {
     return socket_.Create();
 }
 
-Error::Code ServerSocket::Close() {
+Network::Error::Code ServerSocket::Close() {
     return socket_.Close();
 }
 
-Error::Code ServerSocket::Bind(unsigned short port) {
+Network::Error::Code ServerSocket::Bind(unsigned short port) {
     struct sockaddr_in address{};
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = htonl(INADDR_ANY);
     address.sin_port = htons(port);
 
     if (bind(socket_.GetSockfd(), (const struct sockaddr *) &address, sizeof(struct sockaddr_in)) != 0) {
-        return Error::Code::BIND_SOCKET_FAIL;
+        return Network::Error::Code::BIND_SOCKET_FAIL;
     }
 
-    return Error::Code::NONE;
+    return Network::Error::Code::NONE;
 }
 
-Error::Code ServerSocket::Listen(int backlog) {
+Network::Error::Code ServerSocket::Listen(int backlog) {
     if (listen(socket_.GetSockfd(), backlog) != 0) {
-        return Error::Code::LISTEN_SOCKET_FAIL;
+        return Network::Error::Code::LISTEN_SOCKET_FAIL;
     }
 
-    return Error::Code::NONE;
+    return Network::Error::Code::NONE;
 }
 
-Error::Code ServerSocket::Select() {
+Network::Error::Code ServerSocket::Select() {
     temp_fds_ = read_fds_;
 
     if (select(fd_max_ + 1, &temp_fds_, nullptr, nullptr, nullptr) == -1) {
-        return Error::Code::SELECT_FAIL;
+        return Network::Error::Code::SELECT_FAIL;
     }
 
-    return Error::Code::NONE;
+    return Network::Error::Code::NONE;
 }
 
 TCPSocket ServerSocket::Accept() {

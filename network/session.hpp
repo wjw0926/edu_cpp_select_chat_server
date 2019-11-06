@@ -31,7 +31,7 @@ public:
     void SetConnected() { connected_ = true; };
     void SetDisconnected() { connected_ = false; };
 
-    Error::Code Send(const char *data, int size);
+    Network::Error::Code Send(const char *data, int size);
     int Receive(int size);
 
 private:
