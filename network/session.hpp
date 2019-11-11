@@ -44,5 +44,3 @@ private:
 
     unsigned int prev_recv_pos_ = 0;
 };
-
-

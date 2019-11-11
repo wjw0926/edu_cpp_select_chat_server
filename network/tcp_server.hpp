@@ -23,6 +23,8 @@ public:
 protected:
     void Send(int session_index, const char *data, int size);
 
+    Network::Error error_;
+
 private:
     void CreateSession();
     void CloseSession(int session_index);
@@ -34,7 +36,6 @@ private:
     virtual void OnReceive(int session_index, char *data, unsigned short packet_size) {};
 
     ServerSocket server_socket_;
-    Network::Error error_;
 
     std::vector<Session> sessions_;
     std::deque<int> available_session_index_;
