@@ -13,18 +13,29 @@ add_compile_options(-Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic)
 
 add_subdirectory(network)
 
+set(CMAKE_CXX_FLAGS -pthread)
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake-build-debug)
+
+find_package(hiredis REQUIRED)
+include_directories( ${HIREDIS_INCLUDE_DIRS} )
+
 add_executable(select_chat_server
         main.cpp
         server/packet.hpp
         server/config.hpp
         server/chat_server.cpp
         server/chat_server.hpp
-        server/user.cpp
         server/user.hpp
         server/user_manager.cpp
         server/user_manager.hpp
         server/room.cpp
-        server/room.hpp)
+        server/room.hpp
+        server/packet_manager.cpp
+        server/packet_manager.hpp
+        server/redis_manager.cpp
+        server/redis_manager.hpp
+        server/include/CRedisConn.h)
 
 target_link_libraries(select_chat_server
-        network)
+        network
+        ${HIREDIS_LIBRARIES})
