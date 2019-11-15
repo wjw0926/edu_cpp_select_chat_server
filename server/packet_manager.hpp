@@ -8,16 +8,19 @@
 #include <mutex>
 #include <deque>
 #include <functional>
+
 #include "config.hpp"
+#include "error.hpp"
 #include "user_manager.hpp"
 #include "redis_manager.hpp"
+#include "room_manager.hpp"
 
 class PacketManager {
 public:
     PacketManager() = default;
     ~PacketManager() = default;
 
-    bool Init();
+    Server::Error::Code Init();
     void Run();
     void End();
 
@@ -33,14 +36,17 @@ private:
 
     void FuncAccept(PacketInfo packet_info);
     void FuncClose(PacketInfo packet_info);
-
     void FuncLoginReq(PacketInfo packet_info);
     void FuncLoginRes(PacketInfo packet_info);
+    void FuncEnterRoom(PacketInfo packet_info);
+    void FuncLeaveRoom(PacketInfo packet_info);
+    void FuncChatRoom(PacketInfo packet_info);
 
     bool runnable_ = false;
 
     UserManager user_manager_{};
     RedisManager redis_manager_{};
+    RoomManager room_manager_{};
 
     std::thread thread_;
     std::mutex mutex_;

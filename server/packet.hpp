@@ -11,6 +11,9 @@ enum class PacketID : unsigned short {
     LOGIN_REQ = 21,
     LOGIN_RES = 22,
 
+    REDIS_LOGIN_REQ = 121,
+    REDIS_LOGIN_RES = 122,
+
     ROOM_ENTER_REQ = 61,
     ROOM_ENTER_RES = 62,
     ROOM_ENTER_NTF = 63,
@@ -21,10 +24,7 @@ enum class PacketID : unsigned short {
 
     ROOM_CHAT_REQ = 76,
     ROOM_CHAT_RES = 77,
-    ROOM_CHAT_NTF = 78,
-
-    REDIS_LOGIN_REQ = 121,
-    REDIS_LOGIN_RES = 122
+    ROOM_CHAT_NTF = 78
 };
 
 struct PacketInfo {
@@ -36,7 +36,7 @@ struct PacketInfo {
 
 const int MAX_USER_ID_LENGTH = 16;
 const int MAX_USER_PW_LENGTH = 16;
-const int MAX_ROOM_TITLE_SIZE = 16;
+const int MAX_ROOM_CHAT_MSG_LENGTH = 256;
 
 #pragma pack(push, 1)
 
@@ -52,34 +52,50 @@ struct PacketLoginReq {
 };
 
 struct PacketLoginRes : PacketHeader {
-    unsigned short result = 0;
+    unsigned short code = 0;
+};
+
+struct RedisPacketLoginReq {
+    char user_id[MAX_USER_ID_LENGTH] = { 0, };
+    char user_pw[MAX_USER_PW_LENGTH] = { 0, };
+};
+
+struct RedisPacketLoginRes : PacketHeader {
+    unsigned short code = 0;
+    char user_id[MAX_USER_ID_LENGTH] = { 0, };
 };
 
 struct PacketEnterRoomReq {
-    bool created;
-    short index;
-    char title[MAX_ROOM_TITLE_SIZE];
+    int room_number;
 };
 
 struct PacketEnterRoomRes : PacketHeader {
-    unsigned short result = 0;
+    unsigned short code = 0;
 };
 
-struct PacketEnterRoomNtf {
+struct PacketEnterRoomNtf : PacketHeader {
     char user_id[MAX_USER_ID_LENGTH] = { 0, };
-};
-
-struct PacketLeaveRoomReq {
-
 };
 
 struct PacketLeaveRoomRes : PacketHeader {
-    unsigned short result = 0;
+    unsigned short code = 0;
 };
 
-struct PacketLeaveRoomNft
-{
+struct PacketLeaveRoomNtf : PacketHeader {
     char user_id[MAX_USER_ID_LENGTH] = { 0, };
+};
+
+struct PacketChatRoomReq {
+    unsigned short message_length = 0;
+    char message[MAX_ROOM_CHAT_MSG_LENGTH] = { 0, };
+};
+
+struct PacketChatRoomRes : PacketHeader {
+    unsigned short code = 0;
+};
+
+struct PacketChatRoomNtf : PacketHeader {
+    char message[MAX_ROOM_CHAT_MSG_LENGTH] = { 0, };
 };
 
 #pragma pack(pop)
