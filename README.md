@@ -2,7 +2,18 @@
 
 Overview
 --------
-This project contains a C++ source of select chat server implemented by Jaewook Woo.
+This project contains a C++ source of select chat server.
+
+Components
+--------
+##### Network library
+* <code>network/</code> contains source of I/O multiplexing TCP server using select system call.
+##### Chat server logic library
+* <code>server/</code> contains source of chat server with room enter/leave/chat features.
+* Chat server uses TCP network library.
+* Login feature is implemented using redis client.
+##### Application
+* <code>main.cpp</code> which represents application layer runs chat server using network and chat server logic library.
 
 Naming Rules
 --------
@@ -24,4 +35,4 @@ Naming Rules
 
 Author
 --------
-[Jaewook Woo](https://bitbucket-gsp.com2us.net/users/jwwoo)
+[Jaewook Woo](https://github.com/wjw0926)
