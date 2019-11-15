@@ -2,7 +2,6 @@
 // Created by jwwoo on 2019-11-01.
 //
 
-#include <iostream>
 #include "user_manager.hpp"
 #include "config.hpp"
 
@@ -21,7 +20,7 @@ void UserManager::AddUser(const int session_index) {
 
 void UserManager::RemoveUser(const int session_index) {
     auto user = GetUser(session_index);
-    user->SetState(User::State::NONE);
+    user->Clear();
 
     index_user_map_.erase(session_index);
 }
@@ -32,4 +31,14 @@ User* UserManager::GetUser(int index) {
     }
 
     return index_user_map_[index];
+}
+
+bool UserManager::IsDuplicatedUserID(char *user_id) {
+    for (auto & pair : index_user_map_) {
+        if (strncmp(pair.second->GetUserID(), user_id, MAX_USER_ID_LENGTH) == 0) {
+            return true;
+        }
+    }
+
+    return false;
 }
