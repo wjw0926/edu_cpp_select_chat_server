@@ -8,6 +8,7 @@
 #include <thread>
 #include <deque>
 #include "packet.hpp"
+#include "error.hpp"
 
 namespace RedisCpp { class CRedisConn; }
 
@@ -16,7 +17,7 @@ public:
     RedisManager() = default;
     ~RedisManager() = default;
 
-    bool Connect(const std::string& host, unsigned short port);
+    Server::Error::Code Connect(const std::string& host, unsigned short port);
     void Run();
     void End();
 

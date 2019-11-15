@@ -3,16 +3,18 @@
 //
 
 #include "chat_server.hpp"
+#include "error.hpp"
+#include "config.hpp"
 
 void ChatServer::Init(unsigned short port) {
-    Network::Error::Code code = TCPServer::Init(port, PACKET_HEADER_SIZE);
+    Network::Error::Code network_code = TCPServer::Init(port, PACKET_HEADER_SIZE);
 
-    if (code != Network::Error::Code::NONE) {
-        error_.PrintError(code);
+    if (network_code != Network::Error::Code::NONE) {
+        network_error_.PrintError(network_code);
         return;
     }
 
-    if(!packet_manager_.Init()) {
+    if(packet_manager_.Init() != Server::Error::Code::NONE) {
         return;
     }
 

@@ -5,7 +5,6 @@
 #pragma once
 
 #include "../network/tcp_server.hpp"
-#include "config.hpp"
 #include "packet_manager.hpp"
 
 class ChatServer : TCPServer {

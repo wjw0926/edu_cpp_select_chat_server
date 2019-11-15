@@ -7,17 +7,17 @@
 #include "redis_manager.hpp"
 #include "include/CRedisConn.h"
 
-bool RedisManager::Connect(const std::string& host, unsigned short port) {
+Server::Error::Code RedisManager::Connect(const std::string& host, unsigned short port) {
     conn_ = new RedisCpp::CRedisConn();
 
     if (!conn_->connect(host, port)) {
         std::cout << "REDIS: connect error " << conn_->getErrorStr( ) << std::endl;
-        return false;
+        return Server::Error::CONNECT_REDIS_FAIL;
     }
 
     runnable_ = true;
 
-    return true;
+    return Server::Error::NONE;
 }
 
 void RedisManager::Run() {
@@ -69,25 +69,27 @@ void RedisManager::ProcessRedisPacket() {
             lock.unlock();
 
             if (req_packet_info.packet_id == PacketID::REDIS_LOGIN_REQ) {
-                auto login_req = new PacketLoginReq;
-                memcpy(login_req, req_packet_info.body, sizeof(PacketLoginReq));
+                auto login_req = new RedisPacketLoginReq;
+                memcpy(login_req, req_packet_info.body, sizeof(RedisPacketLoginReq));
 
-                PacketLoginRes login_res;
-                login_res.result = 1;
+                RedisPacketLoginRes login_res;
 
                 std::string user_id(login_req->user_id);
                 std::string user_password(login_req->user_pw);
 
                 if (conn_->get(user_id, user_password)) {
-                    login_res.result = 0;
+                    login_res.code = Server::Error::Code::NONE;
+                    memcpy(login_res.user_id, login_req->user_id, MAX_USER_ID_LENGTH);
+                } else {
+                    login_res.code = Server::Error::Code::USER_NOT_EXIST;
                 }
 
                 PacketInfo res_packet_info;
                 res_packet_info.session_index = req_packet_info.session_index;
                 res_packet_info.packet_id = PacketID::REDIS_LOGIN_RES;
-                res_packet_info.body_size = sizeof(PacketLoginRes);
-                res_packet_info.body = new char[sizeof(unsigned short)];
-                memcpy(res_packet_info.body, &login_res.result, sizeof(unsigned short));
+                res_packet_info.body_size = sizeof(RedisPacketLoginRes);
+                res_packet_info.body = new char[res_packet_info.body_size];
+                memcpy(res_packet_info.body, reinterpret_cast<char *>(&login_res), res_packet_info.body_size);
 
                 AddRedisResPacketQueue(res_packet_info);
             }
