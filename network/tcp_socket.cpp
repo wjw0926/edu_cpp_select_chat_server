@@ -12,6 +12,11 @@ Network::Error::Code TCPSocket::Create() {
         return Network::Error::Code::CREATE_SOCKET_FAIL;
     }
 
+    int option = 1;
+    if (setsockopt(sockfd_, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option)) == -1) {
+        return Network::Error::Code::SET_SOCKET_OPTION_FAIL;
+    }
+
     return Network::Error::Code::NONE;
 }
 

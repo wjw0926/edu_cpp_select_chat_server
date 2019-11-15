@@ -14,8 +14,9 @@ Network::Error::Code TCPServer::Init(unsigned short port, unsigned short packet_
 
     packet_header_size_ = packet_header_size;
 
-    if (server_socket_.Create() == Network::Error::Code::CREATE_SOCKET_FAIL) {
-        return Network::Error::Code::CREATE_SOCKET_FAIL;
+    Network::Error::Code code = server_socket_.Create();
+    if (code != Network::Error::Code::NONE) {
+        return code;
     }
 
     if (server_socket_.Bind(port) == Network::Error::Code::BIND_SOCKET_FAIL) {
@@ -43,7 +44,7 @@ Network::Error::Code TCPServer::Init(unsigned short port, unsigned short packet_
 
 void TCPServer::Run() {
     if (server_socket_.Select() == Network::Error::Code::SELECT_FAIL) {
-        error_.PrintError(Network::Error::Code::SELECT_FAIL);
+        network_error_.PrintError(Network::Error::Code::SELECT_FAIL);
         return;
     }
 
@@ -76,14 +77,14 @@ void TCPServer::End() {
 
 void TCPServer::CreateSession() {
     if (available_session_index_.empty()) {
-        error_.PrintError(Network::Error::Code::MAX_CONNECTED_CLIENTS);
+        network_error_.PrintError(Network::Error::Code::MAX_CONNECTED_CLIENTS);
         return;
     }
 
     TCPSocket connected_socket = server_socket_.Accept();
 
     if (connected_socket.GetSockfd() == -1) {
-        error_.PrintError(Network::Error::Code::ACCEPT_SOCKET_FAIL);
+        network_error_.PrintError(Network::Error::Code::ACCEPT_SOCKET_FAIL);
         return;
     }
 
@@ -121,7 +122,7 @@ void TCPServer::Receive(const int session_index) {
     int received_bytes = session.Receive(MAX_RECV_BUFFER_SIZE);
 
     if (received_bytes == -1) {
-        error_.PrintError(Network::Error::Code::RECEIVE_FAIL);
+        network_error_.PrintError(Network::Error::Code::RECEIVE_FAIL);
         CloseSession(session_index);
     } else if (received_bytes == 0) {
         CloseSession(session_index);
@@ -156,7 +157,7 @@ void TCPServer::Send(int session_index, const char *data, int size) {
     sessions_[session_index].ClearSendBuffer();
 
     if (sessions_[session_index].Send(data, size) == Network::Error::Code::SEND_FAIL) {
-        error_.PrintError(Network::Error::Code::SEND_FAIL);
+        network_error_.PrintError(Network::Error::Code::SEND_FAIL);
         CloseSession(session_index);
     }
 }

@@ -20,6 +20,7 @@ namespace Network {
             CLOSE_SOCKET_FAIL = 4,
             ACCEPT_SOCKET_FAIL = 5,
             CONNECT_SOCKET_FAIL = 6,
+            SET_SOCKET_OPTION_FAIL = 7,
 
             SOCKET_NOT_EXIST = 10,
             SEND_FAIL = 11,

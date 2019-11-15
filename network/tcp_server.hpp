@@ -23,7 +23,7 @@ public:
 protected:
     void Send(int session_index, const char *data, int size);
 
-    Network::Error error_;
+    Network::Error network_error_;
 
 private:
     void CreateSession();
